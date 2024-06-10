@@ -64,7 +64,7 @@ public:
     void update(const SasolStock& data) override {
         cout << observerName << " has been notified that Sasol Stock price has changed to: " << data.price << endl;
     }
-    
+
     void updateName(const string& name) override {
         observerName = name;
         cout << "Observer name updated to: " << observerName << endl;
@@ -115,16 +115,24 @@ int main() {
     auto John = make_shared<ConcreteObserver>("John");
     auto Steve = make_shared<ConcreteObserver>("Steve");
 
+    cout << endl << "Adding Steve to Observe Sasol";
+    cout << endl << "Adding John to Observe Sasol";
+    cout << endl << "Adding John to Observe naspers" << endl << endl;
+
     naspersSubject.addObserver(John);
     sasolSubject.addObserver(Steve);
     sasolSubject.addObserver(John);
 
+    cout << "Stocks changing price" << endl << endl;
     naspersSubject.notifyAll(NaspersStock(2500.50));
     sasolSubject.notifyAll(SasolStock(320.75));
+
+    cout << endl << "Removing Steve from Observing Sasol" << endl << endl;
 
     sasolSubject.removeObserver(Steve);
 
-    naspersSubject.notifyAll(NaspersStock(2500.50));
-    sasolSubject.notifyAll(SasolStock(320.75));
+    cout << "Stocks changing price" << endl << endl;
+    naspersSubject.notifyAll(NaspersStock(2570.50));
+    sasolSubject.notifyAll(SasolStock(302.75));
     return 0;
 }
