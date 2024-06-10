@@ -5,66 +5,83 @@
 
 using namespace std;
 
-template<class... Ts>
+// Define a typelist to store multiple types
+template<typename... Types>
 struct TypeList {};
 
-template<class T>
-class AbstractObserver {
-    public:
-        virtual void update(const T& data) = 0;
-        virtual ~AbstractObserver() {}
+// Base Observer Interface for handling updates of different types
+class BaseObserver {
+public:
+    virtual ~BaseObserver() {}
 };
 
-template<class T>
-class ConcreteObserver : public AbstractObserver<T>{
-    public:
-        void update(const T& data) override {
-            cout << "Update data: " << data << endl;
-        }
+// Templated Observer Interface
+template<typename DataType>
+class ObserverInterface : public BaseObserver {
+public:
+    virtual void update(const DataType& data) = 0;
 };
 
-template<class T>
-class AbstractSubject {
-    public:
-        virtual void registerObserver(std::shared_ptr<AbstractObserver<T> > observer) = 0;
-        virtual void notifyObservers(const T& data) = 0;
-        virtual ~AbstractSubject() {}
+// Concrete Observer that can observe multiple data types
+template<typename TypeList>
+class MultiTypeObserver;
+
+// Specialization for TypeList
+template<typename... Types>
+class MultiTypeObserver<TypeList<Types...> > : public ObserverInterface<Types>... {
+public:
+    using ObserverInterface<Types>::update...;
 };
 
-template<class T>
-using ObserverList = vector< shared_ptr <AbstractObserver<T> > >;
+// Observer that handles integer and string updates
+class ConcreteObserver : public MultiTypeObserver<TypeList<int, string> > {
+public:
+    void update(const int& data) override {
+        cout << "Integer update: " << data << endl;
+    }
 
-template<class TypeList>
-class Subject;
+    void update(const string& data) override {
+        cout << "String update: " << data << endl;
+    }
+};
 
-template<class T>
-class Subject : public AbstractSubject<T> {
-    ObserverList<T> observers;
+// Subject interface
+template<typename DataType>
+class SubjectInterface {
+public:
+    virtual void addObserver(std::shared_ptr<ObserverInterface<DataType> > observer) = 0;
+    virtual void notifyAll(const DataType& data) = 0;
+    virtual ~SubjectInterface() {}
+};
 
-    public:
-        void registerObserver(shared_ptr< AbstractObserver<T> > observer) override {
-            // auto& observerList = get<ObserverList<T> >(observers);
-            observers.push_back(observer);
+// Concrete subject implementation
+template<typename DataType>
+class SubjectImplementation : public SubjectInterface<DataType> {
+    vector<shared_ptr<ObserverInterface<DataType> > > observers;
+
+public:
+    void addObserver(shared_ptr<ObserverInterface<DataType> > observer) override {
+        observers.push_back(observer);
+    }
+
+    void notifyAll(const DataType& data) override {
+        for (auto& observer : observers) {
+            observer->update(data);
         }
-
-        void notifyObservers(const T& data) override {
-            // auto& observerList = get<ObserverList<T> >(observers);
-            for (auto& observer : observers){
-                observer->update(data);
-            }
-        }
+    }
 };
 
 int main() {
-    Subject<string> subject;
+    SubjectImplementation<int> intSubject;
+    SubjectImplementation<string> stringSubject;
 
-    auto intObserver = make_shared<ConcreteObserver<string> >();
-    auto itObserver = make_shared<ConcreteObserver<string> >();
+    auto observer = make_shared<ConcreteObserver>();
 
-    subject.registerObserver(intObserver);
-    subject.registerObserver(itObserver);
+    intSubject.addObserver(observer);
+    stringSubject.addObserver(observer);
 
-    subject.notifyObservers("43");
+    intSubject.notifyAll(42);
+    stringSubject.notifyAll("Hello, world!");
 
     return 0;
 }
