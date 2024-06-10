@@ -2,6 +2,7 @@
 #include <memory>
 #include <vector>
 #include <iostream>
+#include <algorithm>
 
 using namespace std;
 
@@ -12,6 +13,7 @@ struct TypeList {};
 // Base Observer Interface for handling updates of different types
 class BaseObserver {
 public:
+    virtual void updateName(const string& name) = 0;
     virtual ~BaseObserver() {}
 };
 
@@ -50,16 +52,22 @@ public:
 // Observer that handles integer and string updates
 class ConcreteObserver : public MultiTypeObserver<TypeList<NaspersStock, SasolStock>> {
 private:
-    string name;
+    string observerName;
+    
 public:
-    ConcreteObserver(const string& observerName) : name(observerName) {}
+    ConcreteObserver(const string& name) : observerName(name) {}
 
     void update(const NaspersStock& data) override {
-        cout << name << " has been notified that Naspers Stock price has changed to: " << data.price << endl;
+        cout << observerName << " has been notified that Naspers Stock price has changed to: " << data.price << endl;
     }
 
     void update(const SasolStock& data) override {
-        cout << name << " has been notified that Sasol Stock price has changed to: " << data.price << endl;
+        cout << observerName << " has been notified that Sasol Stock price has changed to: " << data.price << endl;
+    }
+    
+    void updateName(const string& name) override {
+        observerName = name;
+        cout << "Observer name updated to: " << observerName << endl;
     }
 };
 
@@ -68,6 +76,7 @@ template<typename DataType>
 class SubjectInterface {
 public:
     virtual void addObserver(std::shared_ptr<ObserverInterface<DataType> > observer) = 0;
+    virtual void removeObserver(std::shared_ptr<ObserverInterface<DataType>> observer) = 0;
     virtual void notifyAll(const DataType& data) = 0;
     virtual ~SubjectInterface() {}
 };
@@ -82,6 +91,15 @@ public:
         observers.push_back(observer);
     }
 
+    void removeObserver(shared_ptr<ObserverInterface<DataType>> observer) override {
+        observers.erase(
+        remove_if(observers.begin(), observers.end(),
+                    [&observer](const shared_ptr<ObserverInterface<DataType>>& element) {
+                        return element == observer;
+                    }),
+        observers.end());
+    }
+
     void notifyAll(const DataType& data) override {
         for (auto& observer : observers) {
             observer->update(data);
@@ -90,6 +108,7 @@ public:
 };
 
 int main() {
+    // Stock Exchange Example
     SubjectImplementation<NaspersStock> naspersSubject;
     SubjectImplementation<SasolStock> sasolSubject;
 
@@ -97,11 +116,15 @@ int main() {
     auto Steve = make_shared<ConcreteObserver>("Steve");
 
     naspersSubject.addObserver(John);
-    sasolSubject.addObserver(John);
     sasolSubject.addObserver(Steve);
+    sasolSubject.addObserver(John);
 
     naspersSubject.notifyAll(NaspersStock(2500.50));
     sasolSubject.notifyAll(SasolStock(320.75));
 
+    sasolSubject.removeObserver(Steve);
+
+    naspersSubject.notifyAll(NaspersStock(2500.50));
+    sasolSubject.notifyAll(SasolStock(320.75));
     return 0;
 }
