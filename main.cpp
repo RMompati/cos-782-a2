@@ -33,15 +33,33 @@ public:
     using ObserverInterface<Types>::update...;
 };
 
-// Observer that handles integer and string updates
-class ConcreteObserver : public MultiTypeObserver<TypeList<int, string> > {
+// Stocks
+// Stock update classes
+class NaspersStock {
 public:
-    void update(const int& data) override {
-        cout << "Integer update: " << data << endl;
+    float price;
+    explicit NaspersStock(float p) : price(p) {}
+};
+
+class SasolStock {
+public:
+    float price;
+    explicit SasolStock(float p) : price(p) {}
+};
+
+// Observer that handles integer and string updates
+class ConcreteObserver : public MultiTypeObserver<TypeList<NaspersStock, SasolStock>> {
+private:
+    string name;
+public:
+    ConcreteObserver(const string& observerName) : name(observerName) {}
+
+    void update(const NaspersStock& data) override {
+        cout << name << " has been notified that Naspers Stock price has changed to: " << data.price << endl;
     }
 
-    void update(const string& data) override {
-        cout << "String update: " << data << endl;
+    void update(const SasolStock& data) override {
+        cout << name << " has been notified that Sasol Stock price has changed to: " << data.price << endl;
     }
 };
 
@@ -72,16 +90,16 @@ public:
 };
 
 int main() {
-    SubjectImplementation<int> intSubject;
-    SubjectImplementation<string> stringSubject;
+    SubjectImplementation<NaspersStock> naspersSubject;
+    SubjectImplementation<SasolStock> sasolSubject;
 
-    auto observer = make_shared<ConcreteObserver>();
+    auto observer = make_shared<ConcreteObserver>("John");
 
-    intSubject.addObserver(observer);
-    stringSubject.addObserver(observer);
+    naspersSubject.addObserver(observer);
+    sasolSubject.addObserver(observer);
 
-    intSubject.notifyAll(42);
-    stringSubject.notifyAll("Hello, world!");
+    naspersSubject.notifyAll(NaspersStock(2500.50));
+    sasolSubject.notifyAll(SasolStock(320.75));
 
     return 0;
 }
