@@ -1,1 +1,0 @@
-# c-_Generic-Implementation-of-Observer-Patter
