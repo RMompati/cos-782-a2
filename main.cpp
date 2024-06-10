@@ -93,10 +93,12 @@ int main() {
     SubjectImplementation<NaspersStock> naspersSubject;
     SubjectImplementation<SasolStock> sasolSubject;
 
-    auto observer = make_shared<ConcreteObserver>("John");
+    auto John = make_shared<ConcreteObserver>("John");
+    auto Steve = make_shared<ConcreteObserver>("Steve");
 
-    naspersSubject.addObserver(observer);
-    sasolSubject.addObserver(observer);
+    naspersSubject.addObserver(John);
+    sasolSubject.addObserver(John);
+    sasolSubject.addObserver(Steve);
 
     naspersSubject.notifyAll(NaspersStock(2500.50));
     sasolSubject.notifyAll(SasolStock(320.75));
